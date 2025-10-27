@@ -27,7 +27,7 @@ mod parsers {
   }
 }
 
-// device table as of 828bf45 kindletool
+// device table as of abff364 kindletool
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, BinRead, FromRepr, StrumDisplay, Default)]
 #[br(repr = u16)]
@@ -396,7 +396,6 @@ pub enum Device {
   KindleColorSoftUnknown_3J6 = 0xE46,
   #[strum(to_string = "Kindle ColorSoft (2024) (Unknown Variant 456)")]
   KindleColorSoftUnknown_456 = 0x10A6,
-  // missing from og kindletool
   #[strum(to_string = "Kindle ColorSoft (2024) (Unknown Variant 455)")]
   KindleColorSoftUnknown_455 = 0x10A5,
   #[strum(to_string = "Kindle ColorSoft (2024) (Unknown Variant 4EP)")]
