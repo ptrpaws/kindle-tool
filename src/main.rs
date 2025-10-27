@@ -40,6 +40,15 @@ enum Commands {
     /// file to write deobfuscated data to [default: stdout]
     output_file: Option<PathBuf>,
   },
+
+  /// obfuscate a data stream
+  Md {
+    /// input file to obfuscate [default: stdin]
+    input_file: Option<PathBuf>,
+
+    /// file to write obfuscated data to [default: stdout]
+    output_file: Option<PathBuf>,
+  },
 }
 
 fn get_input(path: Option<&PathBuf>) -> Result<Box<dyn Read>, Box<dyn std::error::Error>> {
@@ -75,6 +84,10 @@ fn main() {
       input_file,
       output_file,
     } => run_demangle(input_file.as_ref(), output_file.as_ref()),
+    Commands::Md {
+      input_file,
+      output_file,
+    } => run_mangle(input_file.as_ref(), output_file.as_ref()),
   };
 
   if let Err(e) = result {
@@ -122,6 +135,28 @@ fn run_demangle(in_path: Option<&PathBuf>, out_path: Option<&PathBuf>) -> Result
     }
     let chunk = &mut buffer[..bytes_read];
     kindle_tool::deobfuscate_in_place(chunk);
+    buf_writer.write_all(chunk)?;
+  }
+  Ok(())
+}
+
+fn run_mangle(in_path: Option<&PathBuf>, out_path: Option<&PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+  let reader = get_input(in_path)?;
+  let mut buf_reader = BufReader::new(reader);
+  let writer = get_output(out_path)?;
+  let mut buf_writer = BufWriter::new(writer);
+
+  eprintln!("obfuscating stream...");
+
+  const BUFFER_SIZE: usize = 8192;
+  let mut buffer = [0; BUFFER_SIZE];
+  loop {
+    let bytes_read = buf_reader.read(&mut buffer)?;
+    if bytes_read == 0 {
+      break;
+    }
+    let chunk = &mut buffer[..bytes_read];
+    kindle_tool::obfuscate_in_place(chunk);
     buf_writer.write_all(chunk)?;
   }
   Ok(())

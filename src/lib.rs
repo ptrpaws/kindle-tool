@@ -15,6 +15,17 @@ pub fn deobfuscate_in_place(data: &mut [u8]) {
   }
 }
 
+#[inline(always)]
+fn obfuscate_byte(byte: u8) -> u8 {
+  ((byte >> 4) | (byte << 4)) ^ 0x7A
+}
+
+pub fn obfuscate_in_place(data: &mut [u8]) {
+  for byte in data.iter_mut() {
+    *byte = obfuscate_byte(*byte);
+  }
+}
+
 mod parsers {
   use super::{deobfuscate_in_place, BinResult};
 

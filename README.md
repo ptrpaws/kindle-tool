@@ -17,11 +17,18 @@ extract the deobfuscated tar.gz payload from a firmware file [aliases: convert]
 - `[OUTPUT_FILE]`: output file for the .tar.gz payload (*default: stdout*)
 
 ### **kindle dm** `[INPUT_FILE]` `[OUTPUT_FILE]`
-deobfuscate a data stream.
+deobfuscate a data stream
 
 **arguments**:
 - `[INPUT_FILE]`: input file to deobfuscate (*default: stdin*)
 - `[OUTPUT_FILE]`: file to write deobfuscated data to (*default: stdout*)
+
+### **kindle md** `[INPUT_FILE]` `[OUTPUT_FILE]`
+obfuscate a data stream
+
+**arguments**:
+- `[INPUT_FILE]`: input file to obfuscate (*default: stdin*)
+- `[OUTPUT_FILE]`: file to write obfuscated data to (*default: stdout*)
 
 ## build
 `kindle-tool` uses cargo for dependencies and builds: `cargo build --release`
