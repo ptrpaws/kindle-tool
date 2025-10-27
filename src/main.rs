@@ -2,7 +2,7 @@ use binrw::BinReaderExt;
 use clap::{Parser, Subcommand};
 use kindle_tool::UpdateBundle;
 use std::fs::File;
-use std::io::{self, BufWriter, Write};
+use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 use std::process;
 
@@ -31,6 +31,24 @@ enum Commands {
     /// output file for the .tar.gz payload [default: stdout]
     output_file: Option<PathBuf>,
   },
+
+  /// deobfuscate a data stream
+  Dm {
+    /// input file to deobfuscate [default: stdin]
+    input_file: Option<PathBuf>,
+
+    /// file to write deobfuscated data to [default: stdout]
+    output_file: Option<PathBuf>,
+  },
+}
+
+fn get_input(path: Option<&PathBuf>) -> Result<Box<dyn Read>, Box<dyn std::error::Error>> {
+  let reader: Box<dyn Read> = if let Some(p) = path {
+    Box::new(File::open(p)?)
+  } else {
+    Box::new(io::stdin())
+  };
+  Ok(reader)
 }
 
 fn get_output(path: Option<&PathBuf>) -> Result<Box<dyn Write>, Box<dyn std::error::Error>> {
@@ -53,6 +71,10 @@ fn main() {
       input_file,
       output_file,
     } => run_dump(&input_file, output_file.as_ref()),
+    Commands::Dm {
+      input_file,
+      output_file,
+    } => run_demangle(input_file.as_ref(), output_file.as_ref()),
   };
 
   if let Err(e) = result {
@@ -80,5 +102,27 @@ fn run_dump(in_path: &PathBuf, out_path: Option<&PathBuf>) -> Result<(), Box<dyn
   };
 
   kindle_tool::dump_payload(&mut in_file, &mut buf_writer)?;
+  Ok(())
+}
+
+fn run_demangle(in_path: Option<&PathBuf>, out_path: Option<&PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+  let reader = get_input(in_path)?;
+  let mut buf_reader = BufReader::new(reader);
+  let writer = get_output(out_path)?;
+  let mut buf_writer = BufWriter::new(writer);
+
+  eprintln!("deobfuscating stream...");
+
+  const BUFFER_SIZE: usize = 8192;
+  let mut buffer = [0; BUFFER_SIZE];
+  loop {
+    let bytes_read = buf_reader.read(&mut buffer)?;
+    if bytes_read == 0 {
+      break;
+    }
+    let chunk = &mut buffer[..bytes_read];
+    kindle_tool::deobfuscate_in_place(chunk);
+    buf_writer.write_all(chunk)?;
+  }
   Ok(())
 }
